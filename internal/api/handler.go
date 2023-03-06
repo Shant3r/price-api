@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/shant3r/price-api/internal/db"
@@ -40,9 +41,33 @@ func (h *Handler) AddProductPrice(ctx context.Context, c *gin.Context) {
 }
 
 func (h *Handler) GetProductPrice(ctx context.Context, c *gin.Context) {
+	idString := c.Request.URL.Query().Get("id")
+	if idString == "" {
+		badRequest(c)
+		return
+	}
+	id, err := strconv.ParseInt(idString, 10, 64)
+	if err != nil {
+		badRequest(c)
+		return
+	}
+	price, err := h.repo.GetProductPrice(ctx, id)
+	if err != nil {
+		if err == db.ErrProductNotFound {
+			notFound(c)
+			return
+		}
+		internalError(c, err)
+		return
+	}
+
+	response := &GetProductPriceResponse{
+		Price: price,
+	}
+
+	c.JSON(http.StatusOK, response)
 
 }
-
 
 func internalError(c *gin.Context, err error) {
 	c.JSON(http.StatusInternalServerError, fmt.Sprintf("internal error: %s", err))
@@ -50,4 +75,8 @@ func internalError(c *gin.Context, err error) {
 
 func badRequest(c *gin.Context) {
 	c.JSON(http.StatusBadRequest, "bad request")
+}
+
+func notFound(c *gin.Context) {
+	c.JSON(http.StatusNotFound, "product not found")
 }

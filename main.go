@@ -45,6 +45,6 @@ func main() {
 	h := api.New(repository)
 
 	r.POST("/products/price", func(c *gin.Context) { h.AddProductPrice(ctx, c) })
-	r.GET("/products/price/:id", func(c *gin.Context) { h.GetProductPrice(ctx, c) })
-		r.Run()
+	r.GET("/products/price", func(c *gin.Context) { h.GetProductPrice(ctx, c) })
+	r.Run()
 }
